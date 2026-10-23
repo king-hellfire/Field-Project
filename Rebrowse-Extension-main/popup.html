@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReBrowse Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-logo">🌐</div>
+      <div class="header-text">
+        <h1>ReBrowse Pro</h1>
+        <p class="subtitle">AI-Powered Website Theming &amp; Analysis</p>
+      </div>
+      <span class="header-badge">v2.0</span>
+    </div>
+  </div>
+
+
+  <div class="main-content">
+    <!-- Theme Presets -->
+    <div class="card theme-section">
+      <div class="card-header">
+        <span>🎨 Theme Presets</span>
+      </div>
+      <div class="button-grid theme-presets-grid">
+        <button id="midnight" class="btn" data-theme="midnight" title="Deep navy blue night theme">
+          <span class="btn-emoji">🌙</span>
+          Midnight
+        </button>
+        <button id="ocean" class="btn" data-theme="ocean" title="Cool deep ocean blue tones">
+          <span class="btn-emoji">🌊</span>
+          Ocean
+        </button>
+        <button id="forest" class="btn" data-theme="forest" title="Earthy deep forest green">
+          <span class="btn-emoji">🌲</span>
+          Forest
+        </button>
+        <button id="sunset" class="btn" data-theme="sunset" title="Warm sunset orange and pink">
+          <span class="btn-emoji">🌅</span>
+          Sunset
+        </button>
+        <button id="aurora" class="btn" data-theme="aurora" title="Northern lights purple and teal">
+          <span class="btn-emoji">🌌</span>
+          Aurora
+        </button>
+        <button id="neon" class="btn" data-theme="neon" title="Electric neon lights on dark streets">
+          <span class="btn-emoji">⚡</span>
+          Neon City
+        </button>
+        <button id="matrix" class="btn" data-theme="matrix" title="Classic green terminal hacker style">
+          <span class="btn-emoji">💻</span>
+          Matrix
+        </button>
+        <button id="retro" class="btn" data-theme="retro" title="80s nostalgia warm amber CRT theme">
+          <span class="btn-emoji">📻</span>
+          Retro
+        </button>
+        <button id="paper" class="btn" data-theme="paper" title="Clean newspaper editorial print style">
+          <span class="btn-emoji">📰</span>
+          Paper
+        </button>
+        <button id="coffee" class="btn" data-theme="coffee" title="Warm cozy coffee shop vibes">
+          <span class="btn-emoji">☕</span>
+          Coffee
+        </button>
+        <button id="minimal" class="btn" data-theme="minimal" title="Distraction-free clean editorial minimalist aesthetic">
+          <span class="btn-emoji">🕊️</span>
+          Minimal
+        </button>
+        <button id="vapor" class="btn" data-theme="vapor" title="Aesthetic retro 80s vaporwave vibes">
+          <span class="btn-emoji">🌴</span>
+          Vaporwave
+        </button>
+        <button id="space" class="btn" data-theme="space" title="Deep cosmos galaxy space theme">
+          <span class="btn-emoji">🚀</span>
+          Space
+        </button>
+        <button id="candy" class="btn" data-theme="candy" title="Sweet pastel cotton-candy, marshmallow & bubblegum tones">
+          <span class="btn-emoji">🍬</span>
+          Candy
+        </button>
+        <button id="noir" class="btn" data-theme="noir" title="Black and white cinematic film noir">
+          <span class="btn-emoji">🎬</span>
+          Noir
+        </button>
+        <button id="reset" class="btn full-width danger">
+          <span class="btn-emoji">🔄</span>
+          Reset All Styles
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Theme Designer -->
+    <div class="card custom-theme-section">
+      <div class="card-header">
+        <span>🖌️ Custom Theme Designer</span>
+      </div>
+      <p class="section-desc">Build your own theme with a visual editor — choose colors, fonts, and more.</p>
+      <div class="button-grid">
+        <button id="openThemeDesigner" class="btn primary full-width" title="Open the visual theme designer">
+          <span class="btn-emoji">✏️</span>
+          Design Custom Theme
+        </button>
+      </div>
+      <!-- Saved custom themes list -->
+      <div id="customThemesList" class="custom-themes-list" style="display:none;">
+        <div class="custom-themes-header">Saved Custom Themes</div>
+        <div id="customThemesGrid" class="custom-themes-grid"></div>
+      </div>
+    </div>
+
+    <!-- AI Features -->
+    <div class="card ai-section">
+      <div class="card-header">
+        <span>🤖 AI-Powered Features</span>
+      </div>
+      <div class="button-grid">
+        <button id="autoDetect" class="btn feature-new" title="Let AI analyze the page and suggest the best theme">
+          <span class="btn-emoji">🧠</span>
+          Auto Detect
+        </button>
+        <button id="summarize" class="btn" title="Generate a concise summary of the page content">
+          <span class="btn-emoji">📝</span>
+          Summarize
+        </button>
+        <button id="highlight" class="btn" title="Extract the most important key points">
+          <span class="btn-emoji">✨</span>
+          Key Points
+        </button>
+        <button id="recommend" class="btn" title="Get related topic suggestions">
+          <span class="btn-emoji">🔗</span>
+          Recommend
+        </button>
+        <button id="translate" class="btn" title="Translate content to another language">
+          <span class="btn-emoji">🌐</span>
+          Translate
+        </button>
+        <button id="accessibility" class="btn" title="Get accessibility improvement suggestions">
+          <span class="btn-emoji">♿</span>
+          A11y Check
+        </button>
+      </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="card api-section">
+      <div class="card-header">
+        <span>⚙️ API Configuration</span>
+      </div>
+      <div class="input-group">
+        <div class="input-wrapper">
+          <input 
+            type="password" 
+            id="apiKey" 
+            placeholder="Enter your Gemini API Key"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Gemini API Key"
+          >
+        </div>
+        <button id="saveApiKey" class="btn primary" title="Save your API key securely">
+          <span class="btn-emoji">💾</span>
+          Save
+        </button>
+      </div>
+      
+      <div style="margin-top: 16px;">
+        <div class="button-grid">
+          <button id="testApi" class="btn" title="Test your API connection">
+            <span class="btn-emoji">🧪</span>
+            Test API
+          </button>
+          <button id="getApiKey" class="btn secondary" title="Get a free API key from Google AI Studio">
+            <span class="btn-emoji">🔑</span>
+            Get Key
+          </button>
+          <button id="clearData" class="btn danger" title="Clear all saved data and preferences">
+            <span class="btn-emoji">🗑️</span>
+            Clear Data
+          </button>
+          <button id="viewStats" class="btn" title="View API usage statistics">
+            <span class="btn-emoji">📊</span>
+            Stats
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header">
+        <span>⚡ Quick Actions</span>
+      </div>
+      <div class="button-grid">
+        <button id="darkMode" class="btn" title="Toggle clean universal dark mode without media distortion">
+          <span class="btn-emoji">🌓</span>
+          Toggle Dark
+        </button>
+        <button id="readingMode" class="btn" title="Enable distraction-free reading mode">
+          <span class="btn-emoji">📖</span>
+          Reading Mode
+        </button>
+        <button id="exportTheme" class="btn" title="Export current theme as JSON file">
+          <span class="btn-emoji">💾</span>
+          Export Theme
+        </button>
+        <button id="importTheme" class="btn" title="Import theme from JSON file">
+          <span class="btn-emoji">📂</span>
+          Import Theme
+        </button>
+      </div>
+    </div>
+
+    <!-- Typography, Pre-Profile & Custom Fonts -->
+    <div class="card">
+      <div class="card-header">
+        <span>🔤 Typography & Custom Fonts</span>
+      </div>
+      <p class="section-desc">Apply curated font profiles or enter any custom Google/system font.</p>
+      
+      <!-- Pre-Profile Font Chips -->
+      <div class="font-profiles-grid">
+        <button class="font-profile-chip active" data-font-id="default" title="Website original default font">
+          <span class="font-chip-name">Default</span>
+          <span class="font-chip-type">Native</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="inter" title="Ultra clean modern tech sans">
+          <span class="font-chip-name" style="font-family: 'Inter', sans-serif;">Inter</span>
+          <span class="font-chip-type">Modern Sans</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="merriweather" title="High-contrast editorial serif">
+          <span class="font-chip-name" style="font-family: 'Merriweather', Georgia, serif;">Merriweather</span>
+          <span class="font-chip-type">Editorial</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="jetbrains" title="Hacker / Developer monospace">
+          <span class="font-chip-name" style="font-family: 'JetBrains Mono', monospace;">JetBrains</span>
+          <span class="font-chip-type">Dev Mono</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="atkinson" title="High legibility / Dyslexia friendly">
+          <span class="font-chip-name" style="font-family: 'Atkinson Hyperlegible', sans-serif;">Atkinson</span>
+          <span class="font-chip-type">Hyperlegible</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="quicksand" title="Warm friendly soft rounded sans">
+          <span class="font-chip-name" style="font-family: 'Quicksand', sans-serif;">Quicksand</span>
+          <span class="font-chip-type">Rounded</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="playfair" title="Prestigious classic luxury serif">
+          <span class="font-chip-name" style="font-family: 'Playfair Display', serif;">Playfair</span>
+          <span class="font-chip-type">Luxury Serif</span>
+        </button>
+        <button class="font-profile-chip" data-font-id="space" title="Futuristic cyberpunk tech geometric">
+          <span class="font-chip-name" style="font-family: 'Space Grotesk', sans-serif;">Space Grotesk</span>
+          <span class="font-chip-type">Cyber Tech</span>
+        </button>
+      </div>
+
+      <!-- Custom Font Input Bar -->
+      <div class="custom-font-bar">
+        <div class="custom-font-input-wrap">
+          <span class="custom-font-icon">✨</span>
+          <input type="text" id="customFontInput" class="custom-font-input" placeholder="Custom font: Poppins, Fira Code, Outfit..." aria-label="Custom Font Name" />
+        </div>
+        <button id="applyCustomFontBtn" class="btn primary custom-font-apply-btn" title="Apply custom font">
+          Apply
+        </button>
+        <button id="resetCustomFontBtn" class="btn custom-font-reset-btn" title="Reset font to website default">
+          ✕
+        </button>
+      </div>
+
+      <!-- Enhanced Font Size Controls -->
+      <div class="font-size-controls">
+        <label for="fontSizeSlider" class="font-size-label">
+          📏 Font Size: <span id="fontSizeValue">100%</span>
+        </label>
+        <input 
+          type="range" 
+          id="fontSizeSlider" 
+          min="60" 
+          max="250" 
+          value="100" 
+          step="10"
+          aria-label="Font size adjustment"
+          title="Adjust font size for better readability"
+        >
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button id="decreaseFontSize" class="btn" style="flex: 1; font-size: 11px; padding: 8px;" title="Decrease font size">
+            <span class="btn-emoji">🔤</span>
+            Smaller
+          </button>
+          <button id="resetFontSize" class="btn" style="flex: 1; font-size: 11px; padding: 8px;" title="Reset to default size">
+            Reset
+          </button>
+          <button id="increaseFontSize" class="btn" style="flex: 1; font-size: 11px; padding: 8px;" title="Increase font size">
+            <span class="btn-emoji">🔠</span>
+            Larger
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card">
+      <div style="text-align: center;">
+        <button id="showHelp" class="btn secondary" style="font-size: 12px; padding: 8px 16px;" title="Show detailed help and welcome page">
+          <span class="btn-emoji">❓</span>
+          Help & Tips
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Display -->
+    <div id="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <!-- Hidden file input for theme import -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;" aria-label="Import theme file">
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
