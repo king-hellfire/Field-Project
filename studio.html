@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChromaCraft – ReBrowse Palette Studio</title>
+  <link rel="icon" type="image/png" href="icons/icon-32.png">
+  <!-- Google Fonts (stylesheets are allowed by the extension CSP; only scripts must be local) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons (bundled locally) -->
+  <link rel="stylesheet" href="libs/phosphor/phosphor.css">
+  <!-- Precompiled Tailwind build: regenerate with the command in README.md -->
+  <link rel="stylesheet" href="studio.css">
+  <link rel="stylesheet" href="studio-polish.css">
+  <!-- Applies saved light/dark preference before first paint -->
+  <script src="studio-init.js"></script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans flex flex-col transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+          <i class="ph ph-paint-brush-broad text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-none">
+            ChromaCraft
+          </h1>
+          <span class="text-xs text-slate-400 font-medium">ReBrowse Palette Studio</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Toolbar -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Use palette on a real website (ReBrowse integration) -->
+        <button id="use-on-site-btn" title="Turn this palette into a ReBrowse theme" class="flex items-center space-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-sm shadow-purple-500/20 active:scale-95 transition-all">
+          <i class="ph ph-magic-wand text-base"></i>
+          <span class="hidden sm:inline">Use on Website</span>
+        </button>
+
+        <!-- Native Eyedropper Button -->
+        <button id="eyedropper-btn" class="flex items-center space-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20 active:scale-95 transition-all">
+          <i class="ph ph-eyedropper text-base"></i>
+          <span class="hidden sm:inline">Pick from Screen</span>
+        </button>
+
+        <!-- Generate Random Palette -->
+        <button id="random-btn" title="Press Spacebar anytime" class="flex items-center space-x-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all">
+          <i class="ph ph-arrows-clockwise text-base"></i>
+          <span class="hidden md:inline">Randomize</span>
+          <kbd class="hidden lg:inline-block ml-1 px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400">Space</kbd>
+        </button>
+
+        <!-- Export Menu Trigger -->
+        <button id="open-export-modal-btn" class="flex items-center space-x-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all">
+          <i class="ph ph-export text-base"></i>
+          <span>Export</span>
+        </button>
+
+        <!-- Dark Mode Toggle -->
+        <button id="theme-toggle-btn" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i class="ph ph-moon text-lg dark:hidden"></i>
+          <i class="ph ph-sun text-lg hidden dark:inline"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 flex flex-col space-y-6">
+
+    <!-- Active Palette Canvas Section -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>Active Color Palette</span>
+            <span id="palette-count-badge" class="px-2 py-0.5 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">5 colors</span>
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Click any code to copy, lock colors to preserve during randomize, or edit directly.</p>
+        </div>
+
+        <!-- Controls: Add color, Harmonies, Clear -->
+        <div class="flex items-center space-x-2">
+          <div class="relative inline-block text-left">
+            <select id="harmony-select" class="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 pr-8 border-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
+              <option value="custom">Harmony Rules...</option>
+              <option value="analogous">Analogous</option>
+              <option value="monochromatic">Monochromatic</option>
+              <option value="triad">Triadic</option>
+              <option value="complementary">Complementary</option>
+              <option value="split">Split Complementary</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+              <i class="ph ph-caret-down text-xs"></i>
+            </div>
+          </div>
+
+          <div id="pick-target-chip" class="hidden items-center gap-1.5 pl-2.5 pr-1 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60">
+            <i class="ph ph-target text-sm"></i>
+            <span>Picks replace <b id="pick-target-name"></b></span>
+            <button id="pick-target-clear" class="w-5 h-5 rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/60 flex items-center justify-center" title="Stop replacing (picks add new colors)"><i class="ph ph-x text-[11px]"></i></button>
+          </div>
+
+          <button id="add-color-btn" class="flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition">
+            <i class="ph ph-plus-circle text-sm"></i>
+            <span>Add Color</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Color Cards Grid -->
+      <div id="palette-strip" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 min-h-[170px]">
+        <!-- Populated via JavaScript -->
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <span class="flex items-center gap-1"><i class="ph ph-cursor-click"></i> Click a color to select it, picks then replace it · double-click or <kbd class="px-1 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">E</kbd> to edit · <kbd class="px-1 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">I</kbd> picks from screen</span>
+        <div id="recent-row" class="hidden items-center gap-2">
+          <span class="font-semibold">Recent</span>
+          <div id="recent-colors" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Workspace Grid (Tabs: Image Extractor, UI Sandbox, Contrast Matrix) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Left Column: Image Extractor & Dropzone (5 Cols) -->
+      <section class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="ph ph-globe text-indigo-500 text-lg"></i>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">Sample Any Website or Picture</h3>
+          </div>
+          <button id="demo-image-btn" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Try Sample</button>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Paste any website URL, paste an image from clipboard (<kbd class="px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700">Ctrl+V</kbd>), or upload/drag any picture.
+        </p>
+
+        <!-- Colours captured from the page the studio was opened on -->
+        <div id="site-source-panel" class="hidden rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="text-[10px] uppercase font-bold tracking-wider text-indigo-500">Theme detected from page CSS</div>
+              <div id="site-source-host" class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">example.com</div>
+            </div>
+            <button id="apply-site-theme-btn" class="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1">
+              <i class="ph ph-copy-simple"></i>
+              <span>Copy Site Theme</span>
+            </button>
+          </div>
+          <div id="site-roles-grid" class="grid grid-cols-5 gap-1.5 text-center">
+            <!-- Background, Text, Heading, Link, Button read from computed styles -->
+          </div>
+          <div>
+            <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Every CSS color on the page <span class="font-normal text-slate-400">(click to add)</span></div>
+            <div id="site-colors-strip" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+
+        <!-- URL Input Tab / Bar -->
+        <div class="space-y-2">
+          <div class="flex items-stretch gap-1.5">
+            <div class="relative flex-1">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="ph ph-link-simple text-sm"></i>
+              </div>
+              <input id="url-input" type="text" placeholder="Enter website (e.g. stripe.com) or image URL" class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+            </div>
+            <button id="fetch-url-btn" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center space-x-1 shrink-0">
+              <i class="ph ph-arrow-circle-right text-sm"></i>
+              <span>Fetch</span>
+            </button>
+          </div>
+          
+          <!-- Quick Popular Websites Presets -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] text-slate-500">
+            <span class="text-slate-400 shrink-0 font-medium">Try site:</span>
+            <button class="site-preset-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 text-slate-600 dark:text-slate-300 transition" data-url="stripe.com">Stripe</button>
+            <button class="site-preset-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 text-slate-600 dark:text-slate-300 transition" data-url="airbnb.com">Airbnb</button>
+            <button class="site-preset-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 text-slate-600 dark:text-slate-300 transition" data-url="spotify.com">Spotify</button>
+            <button class="site-preset-btn px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 text-slate-600 dark:text-slate-300 transition" data-url="linear.app">Linear</button>
+          </div>
+        </div>
+
+        <!-- Dropzone area -->
+        <div id="dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-xl p-3 text-center cursor-pointer transition-colors relative group bg-slate-50 dark:bg-slate-950/50 flex flex-col items-center justify-center min-h-[190px]">
+          <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+          
+          <div id="dropzone-prompt" class="flex flex-col items-center pointer-events-none space-y-2 py-4">
+            <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <i class="ph ph-upload-simple"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to upload, drop image, or paste screenshot (<kbd class="px-1 text-[10px] bg-slate-200 dark:bg-slate-700 rounded">Ctrl+V</kbd>)</p>
+            <p class="text-[11px] text-slate-400">PNG, JPG, WebP, SVG or live web snapshots</p>
+          </div>
+
+          <!-- Loading Spinner -->
+          <div id="canvas-loading" class="hidden flex flex-col items-center justify-center py-8 space-y-2">
+            <i class="ph ph-spinner-gap text-2xl text-indigo-500 animate-spin"></i>
+            <p class="text-xs text-slate-500 font-medium">Fetching website screenshot...</p>
+          </div>
+
+          <!-- Canvas Preview -->
+          <div id="canvas-container" class="hidden w-full relative">
+            <canvas id="image-canvas" class="max-h-72 w-auto mx-auto rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 cursor-crosshair"></canvas>
+            <div id="canvas-loupe" class="canvas-loupe hidden" aria-hidden="true">
+              <canvas id="canvas-loupe-canvas" width="132" height="132"></canvas>
+              <span id="canvas-loupe-hex" class="canvas-loupe-hex"></span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-2 text-center flex items-center justify-center gap-1">
+              <i class="ph ph-cursor-click"></i> Click anywhere on the image to sample color
+            </div>
+          </div>
+        </div>
+
+        <!-- Extract Actions -->
+        <div class="flex items-center space-x-2 pt-1">
+          <button id="extract-palette-btn" class="flex-1 py-2 px-3 bg-slate-800 dark:bg-slate-100 hover:bg-slate-900 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5" disabled>
+            <i class="ph ph-sparkle text-sm"></i>
+            <span>Smart 5-Role Palette Extract</span>
+          </button>
+          <button id="clear-image-btn" class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Clear image">
+            <i class="ph ph-trash text-base"></i>
+          </button>
+        </div>
+
+        <!-- Smart 5-Role Extracted Palette Card -->
+        <div id="smart-palette-section" class="border-t border-slate-200 dark:border-slate-800 pt-3 space-y-2.5 hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <i class="ph ph-diamonds-four text-indigo-500 text-sm"></i>
+              <span>Intelligent 5-Role UI System</span>
+            </span>
+            <button id="apply-smart-palette-btn" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+              <span>Apply to Studio</span>
+              <i class="ph ph-arrow-up-right"></i>
+            </button>
+          </div>
+
+          <!-- 5 Role Swatch Grid -->
+          <div id="smart-roles-grid" class="grid grid-cols-5 gap-1.5 text-center">
+            <!-- Dynamically populated 5 UI roles (Background, Surface, Brand, Accent, Text) -->
+          </div>
+
+          <!-- Micro Real-time preview of the 5 roles working together -->
+          <div id="smart-role-preview" class="p-3 rounded-xl border transition-all text-xs flex items-center justify-between shadow-sm">
+            <div class="space-y-0.5">
+              <div id="smart-preview-title" class="font-bold text-xs">Page Heading</div>
+              <div id="smart-preview-desc" class="text-[10px] opacity-80">Body copy using the extracted 5-role design hierarchy</div>
+            </div>
+            <button id="smart-preview-cta" class="px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition">
+              CTA Action
+            </button>
+          </div>
+        </div>
+
+        <!-- Image Theme Mood Picker -->
+        <div id="theme-mood-section" class="border-t border-slate-200 dark:border-slate-800 pt-3 space-y-2 hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <i class="ph ph-palette text-indigo-500 text-sm"></i>
+              <span>Themes Extracted From Image</span>
+            </span>
+            <span class="text-[10px] text-slate-400">Click a theme to apply</span>
+          </div>
+          
+          <div id="theme-mood-cards" class="grid grid-cols-2 gap-2 text-xs">
+            <!-- Dynamically populated mood buttons -->
+          </div>
+        </div>
+
+        <!-- Color Loupe / Magnified Pixel Zoom & Hover indicator -->
+        <div id="loupe-bar" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <!-- Magnifier lens preview canvas (zoom) -->
+            <div class="relative w-10 h-10 rounded-lg border-2 border-slate-300 dark:border-slate-600 overflow-hidden shadow-inner flex items-center justify-center bg-slate-200">
+              <canvas id="zoom-lens" width="40" height="40" class="w-full h-full"></canvas>
+              <div class="pointer-events-none absolute inset-0 border border-black/20 flex items-center justify-center">
+                <div class="w-1.5 h-1.5 border border-white bg-black/40 rounded-full"></div>
+              </div>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Target Pixel</div>
+              <div id="loupe-hex" class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">#------</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="sample-size" title="Average neighbouring pixels to avoid picking noise" class="text-[11px] font-semibold rounded-lg px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+              <option value="1">1 px</option>
+              <option value="3" selected>3×3 avg</option>
+              <option value="5">5×5 avg</option>
+            </select>
+            <button id="add-loupe-color-btn" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-40" disabled>
+              + Add to Palette
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Live UI Sandbox & Contrast Verification (7 Cols) -->
+      <section class="lg:col-span-7 space-y-6">
+        
+        <!-- Live UI Component Preview -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i class="ph ph-layout text-indigo-500 text-lg"></i>
+              <h3 class="font-bold text-sm text-slate-900 dark:text-white">Live UI & Screen Preview</h3>
+            </div>
+            
+            <!-- View Selector Tabs: Website vs Pop-up Screen -->
+            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+              <button id="view-tab-website" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition">
+                Webpage
+              </button>
+              <button id="view-tab-popup" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                Pop-up Dialog
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Mock Web Widget -->
+          <div id="ui-mockup" class="p-5 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors duration-300 space-y-4">
+            <!-- Navbar Mock -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
+              <div class="flex items-center space-x-2">
+                <div id="ui-dot" class="w-3.5 h-3.5 rounded-full"></div>
+                <span id="ui-logo" class="font-bold text-sm tracking-tight">AcmeBrand Studio</span>
+              </div>
+              <div class="flex space-x-2">
+                <span id="ui-badge" class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full">Pro Member</span>
+              </div>
+            </div>
+
+            <!-- Content Hero Mock -->
+            <div class="space-y-2 py-2">
+              <h4 id="ui-heading" class="text-xl font-bold leading-tight">Elevate Your Digital Experience</h4>
+              <p id="ui-body" class="text-xs leading-relaxed opacity-90 max-w-md">
+                Testing this dynamic color distribution across typography, cards, badges, and primary call-to-actions before shipping to production.
+              </p>
+            </div>
+
+            <!-- Call to Actions -->
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button id="ui-btn-primary" class="px-4 py-2 text-xs font-bold rounded-lg shadow-sm transition transform hover:-translate-y-0.5">
+                Primary Action
+              </button>
+              <button id="ui-btn-secondary" class="px-4 py-2 text-xs font-semibold rounded-lg border transition">
+                Secondary Button
+              </button>
+              <button id="trigger-live-modal-btn" class="ml-auto px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5">
+                <i class="ph ph-browsers text-sm text-indigo-500"></i>
+                <span>Test Fullscreen Pop-up</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pop-up Screen Preview Widget (Toggleable View) -->
+          <div id="popup-screen-preview" class="hidden p-6 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden flex items-center justify-center min-h-[260px] transition-all">
+            <!-- Simulated Background Page Content behind the modal backdrop -->
+            <div class="absolute inset-0 p-5 opacity-20 filter blur-[2px] pointer-events-none space-y-3">
+              <div class="h-4 bg-slate-400 rounded w-1/3"></div>
+              <div class="h-2 bg-slate-300 rounded w-full"></div>
+              <div class="h-2 bg-slate-300 rounded w-4/5"></div>
+              <div class="h-24 bg-slate-200 rounded-lg w-full"></div>
+            </div>
+
+            <!-- Modal Backdrop overlay -->
+            <div id="popup-backdrop" class="absolute inset-0 backdrop-blur-sm transition-colors duration-300"></div>
+
+            <!-- Floating Pop-up Window Card -->
+            <div id="popup-modal-card" class="relative z-10 w-full max-w-sm rounded-xl p-4 sm:p-5 border shadow-2xl transition-all duration-300 space-y-3.5">
+              <!-- Header -->
+              <div class="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
+                <div class="flex items-center gap-2">
+                  <div id="popup-icon-badge" class="w-6 h-6 rounded-md flex items-center justify-center text-xs">
+                    <i class="ph ph-bell-simple-ringing"></i>
+                  </div>
+                  <span id="popup-title" class="font-bold text-xs sm:text-sm">Confirm Action</span>
+                </div>
+                <button id="popup-close-icon" class="p-1 rounded-md opacity-60 hover:opacity-100 transition text-xs">
+                  <i class="ph ph-x"></i>
+                </button>
+              </div>
+
+              <!-- Body -->
+              <p id="popup-body" class="text-xs leading-relaxed opacity-85">
+                This pop-up screen automatically inherits your extracted background, surface, text contrast, and action button themes.
+              </p>
+
+              <!-- Sample Input field in Pop-up -->
+              <div class="space-y-1">
+                <div id="popup-input-label" class="text-[10px] uppercase font-bold tracking-wider opacity-70">Workspace Name</div>
+                <input id="popup-input" type="text" value="New Marketing Project" readonly class="w-full px-3 py-1.5 text-xs rounded-lg border focus:outline-none cursor-default font-medium">
+              </div>
+
+              <!-- Footer Buttons -->
+              <div class="flex items-center justify-end gap-2 pt-1">
+                <button id="popup-cancel-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition">
+                  Cancel
+                </button>
+                <button id="popup-confirm-btn" class="px-3.5 py-1.5 text-xs font-bold rounded-lg shadow-sm transition">
+                  Confirm Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WCAG Contrast Matrix & Accessibility -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-2">
+              <i class="ph ph-shield-check text-emerald-500 text-lg"></i>
+              <h3 class="font-bold text-sm text-slate-900 dark:text-white">WCAG Accessibility Matrix</h3>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">Tested vs White (#FFF) and Dark Slate (#0F172A)</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2 px-3">Color</th>
+                  <th class="py-2 px-3">Vs Pure White</th>
+                  <th class="py-2 px-3">Vs Slate-900</th>
+                  <th class="py-2 px-3">Best Text Color</th>
+                </tr>
+              </thead>
+              <tbody id="contrast-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3 Image-Derived Themes (Dark / Light / Balanced): own card in the right column -->
+        <div id="variants-section" class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <i class="ph ph-swatches text-indigo-500 text-sm"></i>
+              <span>Themes from this picture</span><span class="studio-pill">Dark &middot; Light &middot; Balanced</span>
+            </span>
+            <span id="variant-status-tag" class="text-[10px] text-slate-400">Sampled from image pixels</span>
+          </div>
+          
+          <div id="variants-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
+            <!-- Dynamically populated: 3 theme cards built from the picture -->
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Export Dialog Modal -->
+  <div id="export-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full overflow-hidden flex flex-col">
+      <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="ph ph-code text-indigo-500 text-lg"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white">Export Color Palette</h3>
+        </div>
+        <button id="close-export-modal-btn" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Format Tabs -->
+      <div class="flex border-b border-slate-200 dark:border-slate-800 px-4 space-x-4 bg-slate-50 dark:bg-slate-950/50 text-xs font-semibold">
+        <button class="export-tab active py-3 border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400" data-format="css">CSS Variables</button>
+        <button class="export-tab py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white" data-format="tailwind">Tailwind Config</button>
+        <button class="export-tab py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white" data-format="json">JSON</button>
+        <button class="export-tab py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white" data-format="hex">HEX List</button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3">
+        <div class="relative">
+          <textarea id="export-code-box" readonly class="w-full h-48 bg-slate-900 text-slate-100 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none resize-none leading-relaxed"></textarea>
+          <button id="copy-export-btn" class="absolute top-2.5 right-2.5 px-2.5 py-1 text-xs font-semibold rounded bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center space-x-1 shadow">
+            <i class="ph ph-copy"></i>
+            <span>Copy Code</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <button id="done-export-btn" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Use on Website Modal (ReBrowse theme bridge) -->
+  <div id="use-site-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full max-h-[92vh] overflow-y-auto flex flex-col">
+      <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="ph ph-magic-wand text-purple-500 text-lg"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white">Use Palette on a Website</h3>
+        </div>
+        <button id="close-use-site-btn" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-4">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Your palette is mapped to page roles with readable contrast. Click a suggestion or pick any colour, then apply it to the linked tab or save it as a ReBrowse theme.
+        </p>
+
+        <div id="role-editor" class="role-grid">
+          <!-- Role colour pickers -->
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <div id="role-contrast-note" class="text-[11px] font-medium"></div>
+          <button id="role-autofix" type="button" class="shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 flex items-center gap-1"><i class="ph ph-magic-wand"></i>Fix contrast</button>
+        </div>
+
+        <!-- Use the loaded picture as the page background -->
+        <label id="image-bg-option" class="hidden flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 cursor-pointer">
+          <input id="use-image-bg" type="checkbox" class="w-4 h-4 accent-indigo-600">
+          <span id="image-bg-thumb" class="w-12 h-9 rounded-md bg-center bg-cover border border-black/10 shrink-0"></span>
+          <span class="text-xs text-slate-600 dark:text-slate-300 flex-1">Use the loaded picture as the page background <span class="text-slate-400">(tinted so text stays readable)</span></span>
+        </label>
+        <div id="image-tint-row" class="hidden flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+          <span class="font-semibold">Tint</span>
+          <input id="image-tint" type="range" min="0" max="95" step="5" value="60" class="flex-1 accent-indigo-600">
+          <span id="image-tint-val" class="font-mono w-9 text-right">60%</span>
+        </div>
+
+        <!-- Mini website preview -->
+        <div id="role-site-preview" class="rounded-xl border p-4 space-y-2 transition-colors">
+          <div id="rsp-heading" class="font-bold text-sm">Website heading</div>
+          <p id="rsp-text" class="text-xs leading-relaxed">Body text keeps the site's own font while ReBrowse recolors the page. Here is <span id="rsp-link" class="underline font-semibold">a link</span> in your link color.</p>
+          <div id="rsp-card" class="rounded-lg border p-2.5 flex items-center gap-2">
+            <input id="rsp-input" type="text" value="Search this site..." readonly class="flex-1 min-w-0 px-2.5 py-1.5 text-xs rounded-lg border cursor-default">
+            <span id="rsp-accent" class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg">Button</span>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label for="theme-name-input" class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Theme name</label>
+          <input id="theme-name-input" type="text" maxlength="40" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/60 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div id="target-tab-info" class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5"></div>
+      </div>
+
+      <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-end gap-2">
+        <button id="save-theme-btn" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+          <i class="ph ph-floppy-disk"></i><span>Save Theme</span>
+        </button>
+        <button id="apply-page-btn" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5">
+          <i class="ph ph-paint-roller"></i><span>Apply to Page</span>
+        </button>
+        <button id="save-apply-btn" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5">
+          <i class="ph ph-check-circle"></i><span>Save &amp; Apply</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color editor popover -->
+  <div id="color-editor" class="hidden fixed z-[60] w-[19rem] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-3.5 space-y-3" role="dialog" aria-label="Edit color">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-bold text-slate-800 dark:text-slate-100" id="ce-title">Edit color</span>
+      <button id="ce-close" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center" title="Close (Esc)"><i class="ph ph-x"></i></button>
+    </div>
+    <div id="ce-sv" class="ce-sv" title="Drag to choose saturation and brightness">
+      <div id="ce-sv-handle" class="ce-handle"></div>
+    </div>
+    <input id="ce-hue" type="range" min="0" max="360" step="1" value="0" class="ce-hue" aria-label="Hue">
+    <div class="flex items-center gap-2">
+      <div class="flex h-9 w-16 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0" title="Before / after">
+        <span id="ce-old" class="flex-1"></span><span id="ce-new" class="flex-1"></span>
+      </div>
+      <input id="ce-hex" type="text" maxlength="7" spellcheck="false" class="flex-1 min-w-0 h-9 px-2.5 text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/60 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="HEX color">
+      <button id="ce-eyedropper" class="h-9 w-9 shrink-0 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center" title="Pick from anywhere on screen (I)"><i class="ph ph-eyedropper"></i></button>
+    </div>
+    <div class="grid grid-cols-6 gap-1.5">
+      <label class="ce-field"><span>R</span><input id="ce-r" type="number" min="0" max="255"></label>
+      <label class="ce-field"><span>G</span><input id="ce-g" type="number" min="0" max="255"></label>
+      <label class="ce-field"><span>B</span><input id="ce-b" type="number" min="0" max="255"></label>
+      <label class="ce-field"><span>H</span><input id="ce-h" type="number" min="0" max="360"></label>
+      <label class="ce-field"><span>S%</span><input id="ce-s" type="number" min="0" max="100"></label>
+      <label class="ce-field"><span>L%</span><input id="ce-l" type="number" min="0" max="100"></label>
+    </div>
+    <div>
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tints &amp; shades</div>
+      <div id="ce-shades" class="flex h-7 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700"></div>
+    </div>
+    <div id="ce-recent-wrap">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Recent</div>
+      <div id="ce-recent" class="flex flex-wrap gap-1"></div>
+    </div>
+    <div class="flex items-center gap-1.5 pt-1">
+      <button class="ce-copy" data-format="hex">HEX</button>
+      <button class="ce-copy" data-format="rgb">RGB</button>
+      <button class="ce-copy" data-format="hsl">HSL</button>
+      <button id="ce-revert" class="ce-copy" title="Back to the original color">Revert</button>
+      <button id="ce-done" class="ml-auto px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Done</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Interactive Test Pop-up Modal Layer -->
+  <div id="interactive-live-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div id="interactive-modal-backdrop" class="absolute inset-0 backdrop-blur-md transition-colors duration-300"></div>
+    <div id="interactive-modal-box" class="relative z-10 w-full max-w-md rounded-2xl p-6 border shadow-2xl transition-all duration-300 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div id="interactive-modal-icon" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+            <i class="ph ph-sparkle"></i>
+          </div>
+          <div>
+            <h4 id="interactive-modal-title" class="font-bold text-sm sm:text-base leading-tight">Theme Pop-up Screen</h4>
+            <span id="interactive-modal-subtitle" class="text-[11px] opacity-75">Styled with image-derived colors</span>
+          </div>
+        </div>
+        <button id="close-interactive-modal-btn" class="p-1.5 rounded-lg opacity-60 hover:opacity-100 transition">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <p id="interactive-modal-body" class="text-xs sm:text-sm leading-relaxed opacity-90">
+        Notice how the dialog surface, backdrop tint, input focus ring, and action button harmonize based on the authentic color palette extracted from your image.
+      </p>
+
+      <div class="space-y-1.5">
+        <label id="interactive-modal-input-label" class="text-[11px] font-bold opacity-75">Custom Variable Value</label>
+        <input id="interactive-modal-input" type="text" value="palette-theme-live" readonly class="w-full px-3.5 py-2 text-xs rounded-xl border font-mono">
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button id="interactive-modal-cancel" class="px-4 py-2 text-xs font-semibold rounded-lg border transition">
+          Dismiss
+        </button>
+        <button id="interactive-modal-save" class="px-4 py-2 text-xs font-bold rounded-lg shadow transition">
+          Accept & Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color mathematics (bundled chroma.js 2.4.2) -->
+  <script src="libs/chroma.min.js"></script>
+  <!-- Application Logic -->
+  <script type="module" src="studio.js"></script>
+</body>
+</html>
